@@ -1,0 +1,148 @@
+数据结构Ｐｒｏｌｏｇ里面只有term一种
+prolog里面所有代码和各种数据结构都是各种term
+atom, number这些最基本
+atom就是各种小写字母开头的东西
+还有一种是变量
+另一种是compound term，也就是fuck(a,b,c)这种形式的,然后也就这样子而已
+
+特殊的语法还有list
+list是单链表
+通常是单链表
+[]是nil，通常放在结尾，[] is an atom
+[1,2,3,4]相当于.(1,.(2,.(3,.(4,[]))))
+也就是个compound term，能理解？
+.(a, b)也可以写[a | b]，a叫head，b叫tail
+f(x)更基础，compound term，另一种记法
+比方说f(a,b,c)，如果写f/3，那么表示f带3个参数，但是不care它的值
+表示一个谓词的时候，通常用这种方法
+比方说刚才的p/0
+比方说write/1
+0,1,3这些数字，叫arity
+
+数学运算，用is/2
+is同时是一个operator
+所以可以写成A is B
+相当于is(A, B)
+A is 3 +4 . 结果是A = 7
+A is B，返回true，B是一个表达式，执行B，并将B的结果和A进行unification
+这是数学运算
+那么既然是unification
+6 is 3 + 4，就是false
+因为unify的过程中，false了，7 不等于 6
+
+append([],L,L).
+append([H|T],L2,[H|L3]) :- append(T,L2,L3).
+这个谓词，能看懂代码吗？
+这个谓词，append(A, B, C)，C永远是A和B这两个list连接后的结果。
+不管你给出A, B, C这三个里面的几个具体值，都能给出正确答案
+大多数Prolog内置这个谓词，少数没有
+append([1,2,3],L,[1,2,3,4,5,6])，那么L = [4,5,6]
+
+p :-
+         do_something,
+         fail.
+p.  
+<-- 那么，谁能告诉我，为什么最后还有一个p.？
+p.相当于p :- true.
+所以，这里如果没有最后这个p.，那么这个谓词永远为fail，这样不好。所以再加一个，让它永远true
+永远返回fail，会让人很困扰的。
+
+接下来说call/1
+call(代码)，它的参数是Prolog代码
+会执行对应的代码，有点类似于js的eval
+但是代码不是字符串，而是该怎样就是怎样的代码
+prolog里面，any code are data，所以可以这样子传递
+当调用一个谓词的时候
+传递给它的参数
+在进入谓词体内之前，是不会被计算的
+会以原型传入
+所以这里可以这样子
+比方说，call(write('a')).
+就会打印a，跟不加call一样
+call(write('a').
+a
+true.
+
+接下来是once/1
+用法是once(代码)
+once/1执行传给他的代码，直到有一次为true，或者完全fail。用于流程控制。
+如果 once( a,b,c)，如果a就true了，那么就没有bc?
+是
+once( ( write('a'), write('b') )).
+ab
+true.
+
+once( ( write('a'); write('b') )).
+a
+true.
+如果自己实现：
+once(X) :-
+call(X),
+!.
+
+接下来我们讲if then else
+if a then b else c  写成：
+a -> b ; c
+if a then b elseif c then d else e
+写成a -> b ; c -> d ; e
+那么if-then-else怎么执行的呢
+if a then b else c：
+先执行once(a)，如果true，那么执行b，否则，执行c
+if_then_else(A,B,C) :-
+    once(A), !,
+    call(B).
+if_then_else(A,B,C) :-
+    call(C).
+随手一写
+
+接下来讲另一个控制结构，not
+not不是逻辑运算符，是控制结构
+not(X)在ISO Prolog里是“ \+ X”
+\+ X的作用是
+执行X，如果X返回true，那么在第一次true的时候，返回fail
+如果X为fail，那么返回true
+not(X) :-
+   once(X) -> fail ; true.
+相当于这样子~
+就是说，如果X返回true了
+那么必定 fail
+反过来就true
+
+接下来我们讲循环的技巧！
+no loop structure in prolog
+但是，有一个很厉害的谓词
+repeat/0
+这个谓词的作用是，永远都会有新的代码可以选择，除非被cut
+repeat, write(a), fail.会一直打印a
+repeat, write(a), !.会只打印一个a
+
+repeat.
+repeat :- repeat.
+repeat/0可以这样子来实现
+
+刚才说的repeat，通常是这样子用的
+repeat, 
+dosomething,
+!.  <-- 根据条件来cut
+
+
+课后作业：
+那么，如果使用刚才repeat/0的pattern，来打印1-10，咋弄？
+
+1. 遍历一个列表。
+2. 复制一个列表，每个元素重复两遍。比方说，执行p([1,2,3],X)，会有
+X = [1,1,2,2,3,3]
+
+课后作业，请发email: lonelydrone@qq.com
+
+
+
+
+
+
+
+
+
+
+
+
